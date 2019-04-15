@@ -1,0 +1,34 @@
+version: '3.7'
+services:
+  mongo:
+    image: mongo:4.1.10
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.7.1
+    environment:
+      - "discovery.type=single-node"
+  graylog:
+    image: graylog/graylog:3.0.1-1
+    environment:
+      - GRAYLOG_HTTP_EXTERNAL_URI=http://127.0.0.1:9000/
+    ports:
+      - 9000:9000
+    depends_on:
+      - mongo
+      - elasticsearch
+  zookeeper:
+    image: zookeeper:3.5
+  kafka:
+    image: wurstmeister/kafka:2.12-2.2.0
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_ADVERTISED_PORT: 9092
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    depends_on:
+      - zookeeper
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:6.7.1
+    volumes:
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml
+      - ./logs/:/var/log/example/
+    depends_on:
+      - kafka
